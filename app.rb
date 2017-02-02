@@ -26,7 +26,7 @@ def get_optional(params, key, default=nil)
   end
 end
 
-GTFS_DIR = "/Users/val00362/Downloads/gtfs_20170131"
+GTFS_DIR = "./gtfs_20170131"
 
 # before
 before do

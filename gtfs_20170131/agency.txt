@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url
+22209_7,島田市,https://www.city.shimada.shizuoka.jp/bouhan/komibus.html,Asia/Tokyo,ja,0547-36-7144,https://www.city.shimada.shizuoka.jp/bouhan/untin.html
