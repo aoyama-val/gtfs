@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTFS</title>
+
+  <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/locale/ja.js"></script>
+
+  <!-- Bootstrap-->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+
+  <style>
+    html, body  { height: 100%; }
+    div.sidebar { float: left; width: 450px; height: 100%; background: #eee; overflow: scroll; }
+    div.sidebar_inside { margin: 6px 12px; }
+    div.main    { height: 100%; padding-left: 450px; }
+    div.under_navbar { padding-top: 50px; height: 100%; }
+    h1          { font-size: 24px; margin: 6px 0px; }
+    div.container { height: 100%; padding: 0; }
+    table.table-nofullwidth { width: initial; }
+  </style>
+
+  <script>
+    $(function() {
+      $.getJSON("/stops", function(result) {
+        var $stops = $('#stops');
+        var $sidebar_inside = $('.sidebar_inside');
+        result.stops.forEach(function(stop) {
+          //$option = $('<option>')
+                  //.val(stop.id)
+                  //.text(stop.id + ": " + stop.name);
+          //$stops.append($option);
+          $link = $('<a class="option">').text(stop.id + ": " + stop.name).data("stop_id", stop.id);
+          $sidebar_inside.append($('<div>').html($link));
+        });
+      });
+
+      $(".sidebar_inside").on("click", "a", function() {
+        var $a = $(this);
+        selectStopTimes($a.data("stop_id"));
+      });
+    });
+
+    function selectStopTimes(stop_id) {
+      $.getJSON("/select_stop_times", {stop_id: stop_id}, function(result) {
+        console.log(result);
+
+        var $result = $('#result');
+        $result.children().remove();
+
+        if (result.stop_times.length == 0) {
+          $result.append($('<div>').text("データなし"));
+          return;
+        }
+
+        var now = moment();
+
+        var $table = $('<table class="table table-bordered table-striped table-hover table-nofullwidth">');
+
+        result.stop_times.forEach(function(stop_time) {
+          var m = moment(now.format("YYYY-MM-DD ") + stop_time.arrival_time);
+          var seconds = m.unix() - now.unix();
+          var eta;
+          if (seconds >= 0)
+            eta = "あと" + Math.round(seconds / 60) + "分";
+          else
+            eta = "";
+          $table.append('<tr><td>' + stop_time.arrival_time + '</td><td>' + stop_time.route_short_name + '</td><td>' + eta + '</td></tr>');
+        });
+
+        $result.append($table);
+      });
+    }
+  </script>
+</head>
+<body>
+  <nav class="navbar navbar-fixed-top navbar-default">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">GTFS</a>
+    </div>
+  </nav>
+  <div class="under_navbar">
+    <div class="sidebar span4">
+      <div class="sidebar_inside">
+        バス停を選択して下さい
+      </div>
+    </div>
+    <div class="main">
+      <div class="container">
+        <div id="result">
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<!-- vim: set ts=2 sts=2 sw=2 expandtab list: -->
