@@ -30,6 +30,7 @@ GTFS_DIR = "./gtfs_20170131"
 
 # before
 before do
+  Dir.chdir(File.dirname(__FILE__))
   response.headers["Content-Type"] = "application/json; charset=utf-8"
   response.headers["Access-Control-Allow-Origin"] = "*"
 end

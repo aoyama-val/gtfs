@@ -26,6 +26,7 @@ class GTFS
       trip = OpenStruct.new({
         id:       row["trip_id"],
         route_id: row["route_id"],
+        trip_headsign: row["trip_headsign"],
       })
       @trips[row["trip_id"]] = trip
     end
@@ -86,6 +87,7 @@ class GTFS
         stop_id: stop[:id],
         stop_name: stop[:name],
         route_short_name: route[:route_short_name],
+        trip_headsign: trip[:trip_headsign],
       })
     end
     return result.sort_by {|x| x.arrival_time}

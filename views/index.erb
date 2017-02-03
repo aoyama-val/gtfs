@@ -71,7 +71,7 @@
             eta = "あと" + Math.round(seconds / 60) + "分";
           else
             eta = "";
-          $table.append('<tr><td>' + stop_time.arrival_time + '</td><td>' + stop_time.route_short_name + '</td><td>' + eta + '</td></tr>');
+          $table.append('<tr><td>' + stop_time.arrival_time + '</td><td>' + stop_time.route_short_name + '</td><td>' + stop_time.trip_headsign + '</td><td>' + eta + '</td></tr>');
         });
 
         $result.append($table);
