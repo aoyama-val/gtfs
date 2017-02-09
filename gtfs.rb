@@ -1,5 +1,6 @@
 require "csv"
 require "ostruct"
+require "pp"
 
 class GTFS
   def initialize
@@ -97,6 +98,21 @@ class GTFS
     return @stops
   end
 
+  def select_trips_by_route_id(route_id)
+    return trips = @trips.select {|k, v| v.route_id == route_id}
+  end
+
+  def select_stops_by_trip_id(trip_id)
+    @stop_times.select {|k, v| v.trip_id == trip_id}.map {|k, v| {arrival_time: v.arrival_time, stop: @stops[v.stop_id]}}
+  end
+
+  # 指定した時刻におけるバスの座標 (x, y) を計算する
+  # @param  [String]  trip_id
+  # @param  [Time]    time
+  def get_coords_by_time(trip_id, time)
+    # TODO 未実装
+  end
+
   def self.main
     # 指定路線、指定バス停を通る全時刻を出力するスクリプト
 
@@ -112,13 +128,21 @@ class GTFS
     #@target_stop_id  = nil
 
     gtfs = GTFS.new
-    gtfs.load
+    gtfs.load("./gtfs_20170131")
 
     rows = gtfs.select_stop_times(target_route_id, target_stop_id)
     rows.each do |row|
       puts "arrival_time=#{row[:arrival_time]} stop_id=#{row[:stop_id]} stop_name=#{row[:stop_name]} route_name=#{row[:route_short_name]}"
     end
   end
+
+  def self.test2
+    gtfs = GTFS.new
+    gtfs.load("./gtfs_20170131")
+    pp gtfs.select_stops_by_trip_id("J22209L011TD05")
+  end
+
 end
 
 #GTFS.main
+GTFS.test2
