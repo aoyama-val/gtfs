@@ -1,7 +1,11 @@
 # GTFS
 
+## TODO
+
+- stop_coords.csvをマップごとに分割する
+
 ## start
 
 ```
-bundle exec ./rackup --daemonize --pid pid.txt
+./start
 ```
