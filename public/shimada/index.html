@@ -58,10 +58,10 @@
 
         $('#sidebar').keydown(function(e) {
           if (e.keyCode == 37) {
-            incrementTime(-10);
+            incrementTime(-60);
             updateBus();
           } else if (e.keyCode == 39) {
-            incrementTime(10);
+            incrementTime(60);
             updateBus();
           }
         });
@@ -71,6 +71,14 @@
         };
 
         $('#cb1').click(setRunning);
+
+        $('#slider').on("input", function() {
+          var $this = $(this);
+          var r = $this.val() / $this.attr("max");
+          var seconds = Math.floor(86400 * r / 10) * 10;
+          console.log("seconds", seconds);
+          setTime(seconds);
+        });
 
         setRunning();
         console.log("g_running", g_running);
@@ -84,6 +92,10 @@
         var a = time.split(":");
         var seconds = parseInt(a[0]) * 60*60 + parseInt(a[1]) * 60 + parseInt(a[2]);
         seconds += delta;
+        setTime(seconds);
+      }
+
+      function setTime(seconds) {
         $('#time').val(Math.floor(seconds / 3600) + ":" + zeroPad(Math.floor((seconds % 3600) / 60), 2)+ ":" + zeroPad(seconds % 60, 2));
       }
 
@@ -128,6 +140,7 @@
     <div id="map"></div>
     <div id="sidebar">
         時刻: <input type="text" id="time" name="time" value="12:40:00">
+        <input type="range" id="slider" min="0" max="10000" value="0" style="width: 100%">
 
         <input type="checkbox" id="cb1" class="tgl tgl-ios" checked>
         <label class="tgl-btn" for="cb1"></label>
