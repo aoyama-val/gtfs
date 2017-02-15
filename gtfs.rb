@@ -131,11 +131,11 @@ class GTFS
   end
 
   # 指定された時間に走っているtrip（便）を返す
-  def select_trips_by_time(route_id, time)
+  def select_trips_by_time(route_ids, time)
     str_time = time.strftime("%H:%M:%S")
     trip_times = @trip_times.select {|k, v| v[0] <= str_time && str_time <= v[1]}
     trip_ids = trip_times.keys
-    return trips = trip_ids.map {|id| @trips[id]}.select {|trip| trip[:route_id] == route_id}
+    return trips = trip_ids.map {|id| @trips[id]}.select {|trip| route_ids.include?(trip[:route_id])}
   end
 
   # 指定した時刻における両側のバス停（最後に通過したバス停、次に通過するバス停）を返す

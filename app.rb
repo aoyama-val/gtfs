@@ -74,14 +74,14 @@ get "/select_stop_times" do
 end
 
 get "/bus_coords" do
-  route_id  = get_required(params, "route_id")
-  time      = get_required(params, "time")
+  route_ids  = get_required(params, "route_ids").split(":")
+  time       = get_required(params, "time")
 
   t = Time.parse(time)
   gtfs = GTFS.new
   gtfs.load(GTFS_DIR)
   gtfs.load_stop_coords("./shimada/stop_coords.csv")
-  trips = gtfs.select_trips_by_time(route_id, t)
+  trips = gtfs.select_trips_by_time(route_ids, t)
   if trips.empty?
     return JSON.generate({
       coords: nil
