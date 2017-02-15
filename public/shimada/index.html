@@ -142,7 +142,8 @@
           g_bus_markers[bus.bus_code].setLatLng(bus.coords);
         } else {
           // 存在しないなら新規作成
-          var color = g_colors[g_colorIndex++];
+          g_colorIndex = (g_colorIndex + 1) % g_colors.length;
+          var color = g_colors[g_colorIndex];
           var icon = L.divIcon({
             html: '<img src="https://skybrain.ekispert.jp/img/bus_icon?color=' + color + '&w=46&h=46">',
             className: '',
