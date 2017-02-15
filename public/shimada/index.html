@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タイル確認html</title>
+    <title>島田市　笹間渡笹間線</title>
     <link rel="stylesheet" href="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.css" />
     <link rel="stylesheet" href="tgl.css" />
     <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
@@ -42,25 +42,41 @@
           minZoom: 10,
           zoom: 13,
           center: [-0.05126953125, 0.044921875],
+          //center: [0.3828125, 0.3701171875],
           crs: L.CRS.Simple,
           continuousWorld: true,
         });
 
-        var southWest = [-0.0980224609375, 0.000244140625];
-        var northEast = [0, 0.088134765625];
-
-        var main_layer = L.tileLayer('./tile/{z}/{x}_{y}.png?2', {
-          noWrap: true,  // trueの場合、左右リピートしない
-          maxNativeZoom: 13,
-          bounds: [southWest, northEast],
-        }).addTo(g_map);
+        var use_tile = false;
+        if (use_tile) {
+          // タイルを使う場合
+          var southWest = [-0.0980224609375, 0.000244140625];
+          var northEast = [0, 0.088134765625];
+          var main_layer = L.tileLayer('./tile/{z}/{x}_{y}.png?2', {
+            noWrap: true,  // trueの場合、左右リピートしない
+            maxNativeZoom: 13,
+            bounds: [southWest, northEast],
+          }).addTo(g_map);
+        } else {
+          // タイルを使わない場合
+          var base = 10;
+          var orig_w = 718;
+          var orig_h = 802;
+          var px2latlng = function(px) {
+            return px / Math.pow(2, base);
+          };
+          var w0 = px2latlng(orig_w);
+          var h0 = px2latlng(orig_h);
+          var imageUrl = "./shimada.png";
+          var imageBounds = [[h0, 0], [0, w0]]; // 初期表示範囲
+          imageBounds = [[-0.0980224609375, 0.0001220703125], [-0.0001220703125, 0.0877685546875]]; 
+          L.imageOverlay(imageUrl, imageBounds).addTo(g_map);
+        }
 
         var hash = new L.Hash(g_map);
-        //marker = L.marker(g_map.getCenter()).addTo(g_map);
-        //g_map.on('click', function(e) {
-        //marker.setLatLng(e.latlng);
-        //console.log(e.latlng.lat + ", " + e.latlng.lng);
-        //});
+        g_map.on('click', function(e) {
+          console.log(e.latlng.lat + ", " + e.latlng.lng);
+        });
 
         $('#sidebar').keydown(function(e) {
           if (e.keyCode == 37) {
@@ -151,6 +167,8 @@
             iconAnchor: [23, 30],
             popupAnchor: [23, 10],
           });
+          //bus.coords[0] += 0.3828125 + 0.05126953125;
+          //bus.coords[1] += 0.3701171875 - 0.044921875;
           g_bus_markers[bus.bus_code] = L.marker(bus.coords, {icon: icon}).addTo(g_map);
         }
       }
