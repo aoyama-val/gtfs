@@ -83,15 +83,18 @@ get "/bus_coords" do
 
   t = Time.parse(time)
   trips = gtfs.select_trips_by_time(route_ids, t)
-  if trips.empty?
-    return JSON.generate({
-      coords: nil
-    })
-  else
-    return JSON.generate({
-      coords: gtfs.get_coords_by_time(trips.first[:id], t)
-    })
-  end
+  buses = trips.map {|x|
+    {
+      bus_code:       x[:id],   # GTFSにはバスコードという概念がないので、trip_idにしておく
+      trip_id:        x[:id],
+      route_id:       x[:route_id],
+      trip_headsign:  x[:trip_headsign],
+      coords:         gtfs.get_coords_by_time(x[:id], t),
+    }
+  }
+  return JSON.generate({
+    buses: buses,
+  })
 end
 
 # デバッグ用

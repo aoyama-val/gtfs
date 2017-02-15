@@ -131,6 +131,8 @@ class GTFS
   end
 
   # 指定された時間に走っているtrip（便）を返す
+  # @param  [Array<String>]   route_ids
+  # @param  [Time]            time
   def select_trips_by_time(route_ids, time)
     str_time = time.strftime("%H:%M:%S")
     trip_times = @trip_times.select {|k, v| v[0] <= str_time && str_time <= v[1]}
@@ -219,7 +221,7 @@ class GTFS
     gtfs.load_stop_coords("./shimada/stop_coords.csv")
     #pp gtfs.select_stops_by_trip_id("J22209L011TD05")
     now = Time.new(2017, 2, 14, 16, 52)
-    pp gtfs.select_trips_by_time("J22209L011", now)
+    pp gtfs.select_trips_by_time(["J22209L011"], now)
     #pp gtfs.select_bus_stops_by_time("J22209L011TU06", now)
     #pp gtfs.get_coords_by_time("J22209L011TU06", now)
   end

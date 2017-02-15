@@ -17,17 +17,23 @@
       input#time { font-size: 32px; }
     </style>
     <script>
-      var g_running = true;
+      var g_running;
       var g_map;
-      //var marker;
-      var g_bus_marker;
-      var g_icon = L.divIcon({
-        html: '<img src="https://skybrain.ekispert.jp/img/bus_icon?color=EE1D23&w=46&h=46">',
-        className: '',
-        iconSize: [46, 46],
-        iconAnchor: [23, 30],
-        popupAnchor: [23, 10],
-      });
+      var g_bus_markers = {}; // bus_code => Marker
+      var g_colorIndex = 0;
+      var g_colors = [  // http://www.colordic.org/p/
+        "ff1414",
+        "ff1489",
+        "8914ff",
+        "1414ff",
+        "1489ff",
+        "14ffff",
+        "14ff89",
+        "14ff14",
+        "89ff14",
+        "ffff14",
+        "ff8914",
+      ];
 
       // 初期化
       function init() {
@@ -92,6 +98,9 @@
         var a = time.split(":");
         var seconds = parseInt(a[0]) * 60*60 + parseInt(a[1]) * 60 + parseInt(a[2]);
         seconds += delta;
+        if (seconds > 86400) {
+          seconds = 0;
+        }
         setTime(seconds);
       }
 
@@ -102,23 +111,54 @@
       // バスの表示位置を更新
       function updateBus() {
         var time = "2017-02-14 " + $('#time').val();
-        $.getJSON("/bus_coords", {route_ids: "J22209L011:J22209L012", time: time}, function(result) {
-          console.log(result);
-          if (result.coords) {
-            if (g_bus_marker) {
-              g_bus_marker._icon.style[L.DomUtil.TRANSITION] = ('all ' + 250 + 'ms linear');
-              g_bus_marker.setLatLng(result.coords);
-            } else {
-              g_bus_marker = L.marker(result.coords, {icon: g_icon}).addTo(g_map);
+        $.getJSON("/bus_coords", {route_ids: "J22209L011:J22209L012", time: time}, function(data) {
+          moveBusMarkers(data.buses);
+        });
+      }
+
+      function moveBusMarkers(buses) {
+        // APIから返ってきたデータに含まれていないバスのマーカーを削除する
+        var bus_marker_bus_codes = Object.keys(g_bus_markers);
+        bus_marker_bus_codes.forEach(function(code) {
+          var found = false;
+          buses.forEach(function(bus) {
+            if (bus.bus_code == code) {
+              found = true;
             }
+          });
+          if (!found) {
+            g_map.removeLayer(g_bus_markers[code]);
+            delete g_bus_markers[code];
           }
         });
+
+        buses.forEach(moveOneBusMarker);
+      }
+
+      function moveOneBusMarker(bus) {
+        if (g_bus_markers[bus.bus_code]) {
+          // 既に存在するなら移動だけ
+          g_bus_markers[bus.bus_code]._icon.style[L.DomUtil.TRANSITION] = ('all ' + 250 + 'ms linear');
+          g_bus_markers[bus.bus_code].setLatLng(bus.coords);
+        } else {
+          // 存在しないなら新規作成
+          var color = g_colors[g_colorIndex++];
+          var icon = L.divIcon({
+            html: '<img src="https://skybrain.ekispert.jp/img/bus_icon?color=' + color + '&w=46&h=46">',
+            className: '',
+            iconSize: [46, 46],
+            iconAnchor: [23, 30],
+            popupAnchor: [23, 10],
+          });
+          g_bus_markers[bus.bus_code] = L.marker(bus.coords, {icon: icon}).addTo(g_map);
+        }
       }
 
       // 一定時間ごとに呼ばれる
       function update() {
         if (g_running) {
-          incrementTime(10);
+          var speed = parseInt($('#speed').val());
+          incrementTime(speed);
           updateBus();
         }
         setTimeout(update, 250);
@@ -139,7 +179,9 @@
   <body>
     <div id="map"></div>
     <div id="sidebar">
-        時刻: <input type="text" id="time" name="time" value="12:40:00">
+        時刻: <input type="text" id="time" name="time" value="06:50:00">
+        <br>
+        スピード: <input type="number" id="speed" min="0" step="10" value="10" style="width:30px;">
         <input type="range" id="slider" min="0" max="10000" value="0" style="width: 100%">
 
         <input type="checkbox" id="cb1" class="tgl tgl-ios" checked>
@@ -148,7 +190,6 @@
         <br>
 
         TODO:<br>
-        ・複数バス同時表示への対応。bus_code == trip_idにすればいいはず
         ・skylibs.jsと統合
 
         <br><br>
