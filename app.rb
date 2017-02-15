@@ -9,13 +9,13 @@ require_relative "./gtfs.rb"
 set :show_exceptions, false
 
 def gtfs
-  if !@gtfs
-    @gtfs = GTFS.new
-    @gtfs.load("./gtfs_20170131")
-    @gtfs.load_stop_coords("./shimada/stop_coords.csv")
+  if !$gtfs
+    $gtfs = GTFS.new
+    $gtfs.load("./gtfs_20170131")
+    $gtfs.load_stop_coords("./shimada/stop_coords.csv")
     puts "GTFS loaded"
   end
-  return @gtfs
+  return $gtfs
 end
 
 # クエリーパラメータから必須項目を取り出す

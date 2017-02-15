@@ -174,7 +174,6 @@ class GTFS
       else
         t = (time - t1) / (t2 - t1).to_f
       end
-      puts "laskjd"
       pp coords1 = @stop_coords[bs1[:stop_id].gsub(/_.*/, "")]
       pp coords2 = @stop_coords[bs2[:stop_id].gsub(/_.*/, "")]
       return GTFS.lerp(coords1, coords2, t)
