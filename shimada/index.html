@@ -5,47 +5,127 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>タイル確認html</title>
-    <link rel="stylesheet" href="https://skydev.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.css" />
-    <script src="https://skydev.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.js"></script>
-    <script src="https://skydev.ekispert.jp/lib/leaflet-hash/leaflet-hash.js"></script>
+    <link rel="stylesheet" href="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.css" />
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <script src="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.js"></script>
+    <script src="https://skybrain.ekispert.jp/lib/leaflet-hash/leaflet-hash.js"></script>
     <style>
       html, body { width: 100%; height: 100%; }
-      #map { height: 100%; width: 100%;}
+      #map { float: left; height: 100%; width: calc(100% - 454px);}
+      #sidebar { float: left; height: 100%; width: 454px; }
+      input#time { font-size: 32px; }
     </style>
     <script>
-     var map;
-     var marker;
-     var init = function() {
-       map = L.map('map', {
-         maxZoom: 15,
-         minZoom: 10,
-         zoom: 13,
-         center: [-0.05126953125, 0.044921875],
-         crs: L.CRS.Simple,
-         continuousWorld: true,
-       });
-       
-       var southWest = [-0.0980224609375, 0.000244140625];
-       var northEast = [0, 0.088134765625];
+      var map;
+      //var marker;
+      var bus_marker;
+      var icon = L.divIcon({
+        html: '<img src="https://skybrain.ekispert.jp/img/bus_icon?color=EE1D23&w=46&h=46">',
+        className: '',
+        iconSize: [46, 46],
+        iconAnchor: [23, 40],
+        popupAnchor: [23, 10],
+      });
+      var init = function() {
+        map = L.map('map', {
+          maxZoom: 15,
+          minZoom: 10,
+          zoom: 13,
+          center: [-0.05126953125, 0.044921875],
+          crs: L.CRS.Simple,
+          continuousWorld: true,
+        });
 
-       var main_layer = L.tileLayer('./tile/{z}/{x}_{y}.png?2', {
-         attribution: 'Map data &copy;',
-         noWrap: true,  // trueの場合、左右リピートしない
-         maxNativeZoom: 13,
-         bounds: [southWest, northEast],
-       }).addTo(map);
+        var southWest = [-0.0980224609375, 0.000244140625];
+        var northEast = [0, 0.088134765625];
 
-       var hash = new L.Hash(map);
-       marker = L.marker(map.getCenter()).addTo(map);
-       map.on('click', function(e) {
-         marker.setLatLng(e.latlng);
-         console.log(e.latlng.lat + ", " + e.latlng.lng);
-       });
-     };
+        var main_layer = L.tileLayer('./tile/{z}/{x}_{y}.png?2', {
+          attribution: 'Map data &copy;',
+          noWrap: true,  // trueの場合、左右リピートしない
+          maxNativeZoom: 13,
+          bounds: [southWest, northEast],
+        }).addTo(map);
+
+        var hash = new L.Hash(map);
+        //marker = L.marker(map.getCenter()).addTo(map);
+        //map.on('click', function(e) {
+        //marker.setLatLng(e.latlng);
+        //console.log(e.latlng.lat + ", " + e.latlng.lng);
+        //});
+
+        $('#sidebar').keydown(function(e) {
+          if (e.keyCode == 37) {
+            incrementTime(-10);
+            updateBus();
+          } else if (e.keyCode == 39) {
+            incrementTime(10);
+            updateBus();
+          }
+        });
+
+        start();
+      };
+
+      function incrementTime(delta) {
+        var time = $('#time').val();
+        var a = time.split(":");
+        var seconds = parseInt(a[0]) * 60*60 + parseInt(a[1]) * 60 + parseInt(a[2]);
+        seconds += delta;
+        $('#time').val(Math.floor(seconds / 3600) + ":" + zeroPad(Math.floor((seconds % 3600) / 60), 2)+ ":" + zeroPad(seconds % 60, 2));
+      }
+
+      function updateBus() {
+        var time = "2017-02-14 " + $('#time').val();
+        $.getJSON("http://localhost:4567/bus_coords", {route_id: "J22209L011", time: time}, function(result) {
+          console.log(result);
+          if (result.coords) {
+            if (bus_marker) {
+              bus_marker._icon.style[L.DomUtil.TRANSITION] = ('all ' + 250 + 'ms linear');
+              bus_marker.setLatLng(result.coords);
+            } else {
+              bus_marker = L.marker(result.coords, {icon: icon}).addTo(map);
+            }
+          }
+        });
+      }
+
+      function zeroPad(num, len) {
+        var str = String(num);
+        return ("0000000000" + str).substr(10 + str.length - len);
+      }
+
+      function start() {
+        setTimeout(update, 0);
+      }
+
+      function update() {
+        incrementTime(10);
+        updateBus();
+        //if ($('#time').val() < '17:10:00') {
+          setTimeout(update, 250);
+        //}
+      }
      
     </script>
   </head>
   <body onload="init();">
     <div id="map"></div>
+    <div id="sidebar">
+        時刻: <input type="text" id="time" name="time" value="12:40:00">
+
+        <br>
+
+        TODO:<br>
+        ・複数バス同時表示への対応。bus_code == trip_idにすればいいはず
+        ・skylibs.jsと統合
+
+        <br><br>
+
+        <br>
+        <a href="https://www.city.shimada.shizuoka.jp/bouhan/documents/busmap.pdf">バスマップ</a>
+        <br>
+
+        <img src="sasamado.png">
+    </div>
   </body>
 </html>

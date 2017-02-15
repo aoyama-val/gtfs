@@ -1,6 +1,7 @@
 require "sinatra"
 require "sinatra/reloader"
 require "json"
+require "time"
 #require "sqlite3"
 
 require_relative "./gtfs.rb"
@@ -48,6 +49,11 @@ get "/" do
   erb :index
 end
 
+#get "/map" do
+  #response.headers["Content-Type"] = "text/html; charset=utf-8"
+  #File.read("./shimada/index.html")
+#end
+
 get "/stops" do
   gtfs = GTFS.new
   gtfs.load(GTFS_DIR)
@@ -67,20 +73,31 @@ get "/select_stop_times" do
   })
 end
 
+get "/bus_coords" do
+  route_id  = get_required(params, "route_id")
+  time      = get_required(params, "time")
+
+  t = Time.parse(time)
+  gtfs = GTFS.new
+  gtfs.load(GTFS_DIR)
+  gtfs.load_stop_coords("./shimada/stop_coords.csv")
+  trips = gtfs.select_trips_by_time(route_id, t)
+  if trips.empty?
+    return JSON.generate({
+      coords: nil
+    })
+  else
+    return JSON.generate({
+      coords: gtfs.get_coords_by_time(trips.first[:id], t)
+    })
+  end
+end
+
+# デバッグ用
 get "/dir" do
   Dir.pwd
 end
 
-
-#get '/' do
-#  response.headers["Cache-Control"] = "max-age=10, public, must-revalidate"
-#  headers = request.env.select {|key, val| key.start_with?("HTTP_") }
-#  ret = {
-#    hello: "sinatra",
-#    headers: headers,
-#  }
-#  return JSON.generate(ret)
-#end
 
 get '/hoge' do
   a = get_required(params, "a")
