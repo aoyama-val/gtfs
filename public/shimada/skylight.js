@@ -126,10 +126,13 @@ function moveBusMarkers(buses) {
 }
 
 function moveOneBusMarker(bus) {
+  console.log(bus.coords);
   if (g_bus_markers[bus.bus_code]) {
     // 既に存在するなら移動だけ
-    g_bus_markers[bus.bus_code]._icon.style[L.DomUtil.TRANSITION] = ('all ' + 250 + 'ms linear');
-    g_bus_markers[bus.bus_code].setLatLng(bus.coords);
+    if (bus.coords) {
+      g_bus_markers[bus.bus_code]._icon.style[L.DomUtil.TRANSITION] = ('all ' + 250 + 'ms linear');
+      g_bus_markers[bus.bus_code].setLatLng(bus.coords);
+    }
   } else {
     // 存在しないなら新規作成
     g_colorIndex = (g_colorIndex + 1) % g_colors.length;

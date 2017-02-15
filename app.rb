@@ -83,6 +83,7 @@ get "/bus_coords" do
 
   t = Time.parse(time)
   trips = gtfs.select_trips_by_time(route_ids, t)
+  byebug
   buses = trips.map {|x|
     {
       bus_code:       x[:id],   # GTFSにはバスコードという概念がないので、trip_idにしておく

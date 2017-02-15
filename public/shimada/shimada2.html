@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>島田市　笹間渡笹間線</title>
+    <title>島田市　2</title>
     <link rel="stylesheet" href="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.css" />
     <link rel="stylesheet" href="tgl.css" />
     <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
@@ -21,9 +21,10 @@
       $(function() {
         skyLightInit({
           center: [-0.05126953125, 0.044921875],
-          image_url: "./shimada.png",
-          image_bounds: [[-0.0980224609375, 0.0001220703125], [-0.0001220703125, 0.0877685546875]],
-          route_ids: "J22209L011:J22209L012",
+          image_url: "./shimada2.png",
+          image_bounds: [[-0.1, 0], [0, 0.1 / 0.6959916710046851]],
+          route_ids: "J22209L07:J22209L09",
+          map_code: "shimada2",
         });
       });
     </script>
@@ -31,7 +32,7 @@
   <body>
     <div id="map"></div>
     <div id="sidebar">
-        時刻: <input type="text" id="time" name="time" value="06:50:00">
+        時刻: <input type="text" id="time" name="time" value="11:02:00">
         <br>
         スピード: <input type="number" id="speed" min="0" step="10" value="10" style="width:30px;">
         <input type="range" id="slider" min="0" max="10000" value="0" style="width: 100%">
@@ -50,7 +51,7 @@
         <a href="https://www.city.shimada.shizuoka.jp/bouhan/documents/busmap.pdf" target="_blank">島田市バスマップ（PDF）</a>
         <br>
 
-        <img src="sasamado.png">
+        <img src="shimada2_timetable.png">
     </div>
   </body>
 </html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>島田市　笹間渡笹間線</title>
+    <link rel="stylesheet" href="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.css" />
+    <link rel="stylesheet" href="tgl.css" />
+    <script src="https://code.jquery.com/jquery-2.2.1.min.js"></script>
+    <script src="https://skybrain.ekispert.jp/lib/leaflet-1.0.0-rc3/leaflet.js"></script>
+    <script src="https://skybrain.ekispert.jp/lib/leaflet-hash/leaflet-hash.js"></script>
+    <style>
+      html, body { width: 100%; height: 100%; }
+      #map { float: left; height: 100%; width: calc(100% - 454px);}
+      #sidebar { float: left; height: 100%; width: 454px; }
+      input#time { font-size: 32px; }
+    </style>
+    <script src="./skylight.js"></script>
+    <script>
+      $(function() {
+        skyLightInit({
+          center: [-0.05126953125, 0.044921875],
+          image_url: "./shimada.png",
+          image_bounds: [[-0.0980224609375, 0.0001220703125], [-0.0001220703125, 0.0877685546875]],
+          route_ids: "J22209L011:J22209L012",
+          map_code: "shimada1",
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="sidebar">
+        時刻: <input type="text" id="time" name="time" value="06:50:00">
+        <br>
+        スピード: <input type="number" id="speed" min="0" step="10" value="10" style="width:30px;">
+        <input type="range" id="slider" min="0" max="10000" value="0" style="width: 100%">
+
+        <input type="checkbox" id="cb1" class="tgl tgl-ios" checked>
+        <label class="tgl-btn" for="cb1"></label>
+
+        <br>
+
+        TODO:<br>
+        ・skylibs.jsと統合
+
+        <br><br>
+
+        <br>
+        <a href="https://www.city.shimada.shizuoka.jp/bouhan/documents/busmap.pdf" target="_blank">島田市バスマップ（PDF）</a>
+        <br>
+
+        <img src="sasamado.png">
+    </div>
+  </body>
+</html>
+<!-- vim: set ts=2 sts=2 sw=2 expandtab list: -->

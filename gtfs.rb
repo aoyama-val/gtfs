@@ -178,7 +178,12 @@ class GTFS
       end
       pp coords1 = @stop_coords[bs1[:stop_id].gsub(/_.*/, "")]
       pp coords2 = @stop_coords[bs2[:stop_id].gsub(/_.*/, "")]
-      return GTFS.lerp(coords1, coords2, t)
+      if coords1 && coords2
+        return GTFS.lerp(coords1, coords2, t)
+      else
+        puts "coords1 or coords2 not found"
+        return nil
+      end
     else
       puts "bs1 or bs2 not found"
       return nil
@@ -220,10 +225,20 @@ class GTFS
     gtfs.load("./gtfs_20170131")
     gtfs.load_stop_coords("./shimada/stop_coords.csv")
     #pp gtfs.select_stops_by_trip_id("J22209L011TD05")
-    now = Time.new(2017, 2, 14, 16, 52)
-    pp gtfs.select_trips_by_time(["J22209L011"], now)
-    #pp gtfs.select_bus_stops_by_time("J22209L011TU06", now)
-    #pp gtfs.get_coords_by_time("J22209L011TU06", now)
+    now = Time.new(2017, 2, 14, 11, 10)
+    trips = gtfs.select_trips_by_time(["J22209L07"], now)
+    puts "trips = "
+    pp trips
+    trips.each do |trip|
+      puts "bus_stops = "
+      pp gtfs.select_bus_stops_by_time(trip[:id], now)
+      puts "coords = "
+      pp gtfs.get_coords_by_time(trip[:id], now)
+    end
+
+    gtfs.select_stops_by_trip_id("J22209L09TL04").each do |stop|
+      puts "#{stop[:stop][:id]},#{stop[:stop][:name]}"
+    end
   end
 
 end
