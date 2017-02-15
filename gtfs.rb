@@ -227,5 +227,8 @@ class GTFS
 
 end
 
-#GTFS.main
-GTFS.test2
+
+if __FILE__ == $0
+  #GTFS.main
+  GTFS.test2
+end

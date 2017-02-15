@@ -8,6 +8,16 @@ require_relative "./gtfs.rb"
 
 set :show_exceptions, false
 
+def gtfs
+  if !@gtfs
+    @gtfs = GTFS.new
+    @gtfs.load("./gtfs_20170131")
+    @gtfs.load_stop_coords("./shimada/stop_coords.csv")
+    puts "GTFS loaded"
+  end
+  return @gtfs
+end
+
 # クエリーパラメータから必須項目を取り出す
 def get_required(params, key)
   key = key.to_s
@@ -26,8 +36,6 @@ def get_optional(params, key, default=nil)
     return default
   end
 end
-
-GTFS_DIR = "./gtfs_20170131"
 
 # before
 before do
@@ -55,8 +63,6 @@ end
 #end
 
 get "/stops" do
-  gtfs = GTFS.new
-  gtfs.load(GTFS_DIR)
   stops = gtfs.stops
   return JSON.generate({
     stops: stops.map {|k, v| v.to_h}.sort_by {|x| x[:id]}
@@ -65,8 +71,6 @@ end
 
 get "/select_stop_times" do
   stop_id = get_required(params, "stop_id")
-  gtfs = GTFS.new
-  gtfs.load(GTFS_DIR)
   stop_times = gtfs.select_stop_times(nil, stop_id)
   return JSON.generate({
     stop_times: stop_times.map {|v| v.to_h}
@@ -78,9 +82,6 @@ get "/bus_coords" do
   time       = get_required(params, "time")
 
   t = Time.parse(time)
-  gtfs = GTFS.new
-  gtfs.load(GTFS_DIR)
-  gtfs.load_stop_coords("./shimada/stop_coords.csv")
   trips = gtfs.select_trips_by_time(route_ids, t)
   if trips.empty?
     return JSON.generate({
