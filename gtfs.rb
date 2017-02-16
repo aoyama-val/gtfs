@@ -2,6 +2,7 @@ require "byebug"
 require "csv"
 require "ostruct"
 require "pp"
+require "pry"
 require "time"
 
 class GTFS
@@ -9,13 +10,20 @@ class GTFS
     @stops = {}   # id (String) => Hash
     @trips = {}  # id (String) => Hash
     @stop_times = {}  # id (String) => Hash
-
   end
 
   def load(dir)
+    gtfs_dir = "#{dir}/gtfs_20170131"
+
+    @csv_options = {
+      headers:           true,
+      header_converters: lambda {|f| f.strip},
+      converters:        lambda {|f| f ? f.strip : nil}
+    }
+
     # load stops
     @stops = {}   # id (String) => Hash
-    csv = CSV.read("#{dir}/stops.txt", headers: true)
+    csv = CSV.read("#{gtfs_dir}/stops.txt", @csv_options)
     csv.each do |row|
       stop = OpenStruct.new({
         id:   row["stop_id"],
@@ -26,7 +34,7 @@ class GTFS
 
     # load trips
     @trips = {}  # id (String) => Hash
-    csv = CSV.read("#{dir}/trips.txt", headers: true)
+    csv = CSV.read("#{gtfs_dir}/trips.txt", @csv_options)
     csv.each do |row|
       trip = OpenStruct.new({
         id:       row["trip_id"],
@@ -38,7 +46,7 @@ class GTFS
 
     # load routes
     @routes = {}  # id (String) => Hash
-    csv = CSV.read("#{dir}/routes.txt", headers: true)
+    csv = CSV.read("#{gtfs_dir}/routes.txt", @csv_options)
     csv.each do |row|
       route = OpenStruct.new({
         id:               row["route_id"],
@@ -53,7 +61,7 @@ class GTFS
     # load stop_times
     @stop_times = {}  # id (String) => Hash
     id = 0
-    csv = CSV.read("#{dir}/stop_times.txt", headers: true)
+    csv = CSV.read("#{gtfs_dir}/stop_times.txt", @csv_options)
     csv.each do |row|
       id += 1
       stop_time = OpenStruct.new({
@@ -70,19 +78,9 @@ class GTFS
     @trip_times = @stop_times.group_by {|id, stop_times| stop_times[:trip_id]}
                 .map {|trip_id, v| arrival_times = v.map {|x| x[1].arrival_time}; [trip_id, [arrival_times.min, arrival_times.max]]}
                 .to_h
-  end
 
-  def load_stop_coords(csv_path)
-    @stop_coords = {}
-    csv = CSV.read(csv_path, headers: true)
-    csv.each do |row|
-      coord = OpenStruct.new({
-        stop_id: row["stop_id"],
-        x: row["x"].to_f,
-        y: row["y"].to_f,
-      })
-      @stop_coords[row["stop_id"]] = coord
-    end
+    load_stop_coords("#{dir}/stop_coords.csv")
+    load_intermediate_points("#{dir}/intermediate_points.csv")
   end
 
   def select_stop_times(target_route_id, target_stop_id)
@@ -164,11 +162,11 @@ class GTFS
   # @param  [String]  trip_id
   # @param  [Time]    time
   def get_coords_by_time(trip_id, time)
-    bs1, bs2 = select_bus_stops_by_time(trip_id, time)
-    if bs1 && bs2
+    stop_time1, stop_time2 = select_bus_stops_by_time(trip_id, time)
+    if stop_time1 && stop_time2
       str_today = time.strftime("%Y-%m-%d")
-      t1 = Time.parse("#{str_today} #{bs1[:arrival_time]}")
-      t2 = Time.parse("#{str_today} #{bs2[:arrival_time]}")
+      t1 = Time.parse("#{str_today} #{stop_time1[:arrival_time]}")
+      t2 = Time.parse("#{str_today} #{stop_time2[:arrival_time]}")
       #p t1
       #p t2
       if t1 == t2
@@ -176,8 +174,13 @@ class GTFS
       else
         t = (time - t1) / (t2 - t1).to_f
       end
-      pp coords1 = @stop_coords[bs1[:stop_id].gsub(/_.*/, "")]
-      pp coords2 = @stop_coords[bs2[:stop_id].gsub(/_.*/, "")]
+      coords1 = @stop_coords[stop_time1[:stop_id].gsub(/_.*/, "")]
+      coords2 = @stop_coords[stop_time2[:stop_id].gsub(/_.*/, "")]
+      
+      if coords1 && coords2
+        #coords1, coords2 = IntermediatePoint.lerp(stop_time1, stop_time2, t)
+      end
+
       if coords1 && coords2
         return GTFS.lerp(coords1, coords2, t)
       else
@@ -185,7 +188,7 @@ class GTFS
         return nil
       end
     else
-      puts "bs1 or bs2 not found"
+      puts "stop_time1 or stop_time2 not found"
       return nil
     end
   end
@@ -197,7 +200,7 @@ class GTFS
     ]
   end
 
-  def self.main
+  def self.main(gtfs)
     # 指定路線、指定バス停を通る全時刻を出力するスクリプト
 
     # J22209L08   = 夢づくり会館線
@@ -211,19 +214,13 @@ class GTFS
     #@target_stop_id  = "J22209867_0"
     #@target_stop_id  = nil
 
-    gtfs = GTFS.new
-    gtfs.load("./gtfs_20170131")
-
     rows = gtfs.select_stop_times(target_route_id, target_stop_id)
     rows.each do |row|
       puts "arrival_time=#{row[:arrival_time]} stop_id=#{row[:stop_id]} stop_name=#{row[:stop_name]} route_name=#{row[:route_short_name]}"
     end
   end
 
-  def self.test2
-    gtfs = GTFS.new
-    gtfs.load("./gtfs_20170131")
-    gtfs.load_stop_coords("./shimada/stop_coords.csv")
+  def self.test2(gtfs)
     #pp gtfs.select_stops_by_trip_id("J22209L011TD05")
     now = Time.new(2017, 2, 14, 11, 10)
     trips = gtfs.select_trips_by_time(["J22209L07"], now)
@@ -241,10 +238,48 @@ class GTFS
     end
   end
 
+  private
+
+  def load_stop_coords(csv_path)
+    @stop_coords = {}
+    csv = CSV.read(csv_path, headers: true)
+    csv.each do |row|
+      coord = OpenStruct.new({
+        stop_id: row["stop_id"],
+        x: row["x"].to_f,
+        y: row["y"].to_f,
+      })
+      @stop_coords[row["stop_id"]] = coord
+    end
+  end
+
+  def load_intermediate_points(csv_path)
+    @intermediate_points = {}
+    csv = CSV.read(csv_path, @csv_options)
+    csv.each do |row|
+      point = OpenStruct.new({
+        id:           row["intermediate_point_id"],
+        stop_id1:     row["stop_id1"],
+        stop_id2:     row["stop_id2"],
+        x:            row["x"].to_f,
+        y:            row["y"].to_f,
+      })
+      key = point[:stop_id1] + ":" + point[:stop_id2]
+      @intermediate_points[key] = point
+    end
+  end
+
 end
 
-
 if __FILE__ == $0
-  #GTFS.main
-  GTFS.test2
+  gtfs = GTFS.new
+  gtfs.load("./data")
+
+  if ARGV[0] == "console"
+    puts "Entering console"
+    binding.pry
+    puts "Quit console"
+  else
+    GTFS.test2(gtfs)
+  end
 end

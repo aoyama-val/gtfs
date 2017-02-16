@@ -3,8 +3,17 @@ GEM
   specs:
     backports (3.6.8)
     byebug (9.0.6)
+    coderay (1.1.1)
     json (2.0.3)
+    method_source (0.8.2)
     multi_json (1.12.1)
+    pry (0.10.4)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    pry-byebug (3.4.2)
+      byebug (~> 9.0)
+      pry (~> 0.10)
     rack (1.6.5)
     rack-protection (1.5.3)
       rack
@@ -23,14 +32,15 @@ GEM
       tilt (>= 1.3, < 3)
     sinatra-reloader (1.0)
       sinatra-contrib
+    slop (3.6.0)
     tilt (2.0.6)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  byebug
   json
+  pry-byebug
   rack
   sinatra
   sinatra-reloader

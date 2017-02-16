@@ -2,6 +2,8 @@ require "sinatra"
 require "sinatra/reloader"
 require "json"
 require "time"
+require "byebug"
+require "pry"
 #require "sqlite3"
 
 require_relative "./gtfs.rb"
@@ -11,8 +13,7 @@ set :show_exceptions, false
 def gtfs
   if !$gtfs
     $gtfs = GTFS.new
-    $gtfs.load("./gtfs_20170131")
-    $gtfs.load_stop_coords("./shimada/stop_coords.csv")
+    $gtfs.load("./data")
     puts "GTFS loaded"
   end
   return $gtfs
@@ -83,7 +84,6 @@ get "/bus_coords" do
 
   t = Time.parse(time)
   trips = gtfs.select_trips_by_time(route_ids, t)
-  byebug
   buses = trips.map {|x|
     {
       bus_code:       x[:id],   # GTFSにはバスコードという概念がないので、trip_idにしておく
