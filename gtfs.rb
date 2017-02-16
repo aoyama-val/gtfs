@@ -178,11 +178,7 @@ class GTFS
       coords2 = @stop_coords[stop_time2[:stop_id].gsub(/_.*/, "")]
       
       if coords1 && coords2
-        #coords1, coords2 = IntermediatePoint.lerp(stop_time1, stop_time2, t)
-      end
-
-      if coords1 && coords2
-        return GTFS.lerp(coords1, coords2, t)
+        return lerp_using_intermediate_points(stop_time1[:stop_id], stop_time2[:stop_id], coords1, coords2, stop_time1[:arrival_time], stop_time2[:arrival_time], t)
       else
         puts "coords1 or coords2 not found"
         return nil
@@ -193,14 +189,62 @@ class GTFS
     end
   end
 
-  def lerp_using_intermediate_points
+  def lerp_using_intermediate_points(stop_id1, stop_id2, coords1, coords2, arrival_time1, arrival_time2, t)
+    stop_id1.gsub!(/_.*/, "")
+    stop_id2.gsub!(/_.*/, "")
+    key = stop_id1 + ":" + stop_id2
+    key_op = stop_id2 + ":" + stop_id1
+    if @intermediate_points[key]
+      points = @intermediate_points[key]
+
+      rows = [[0.0, coords1[:x]]] + points.map {|p| [p[:rate], p[:x]]} + [[1.0, coords2[:x]]]
+      x = GTFS.lerp_using_rows(rows, t)
+
+      rows = [[0.0, coords1[:y]]] + points.map {|p| [p[:rate], p[:y]]} + [[1.0, coords2[:y]]]
+      y = GTFS.lerp_using_rows(rows, t)
+
+      return [x, y]
+    elsif @intermediate_points[key_op]
+      points = @intermediate_points[key_op]
+      t = 1.0 - t
+      puts "reverse!"
+
+      rows = [[0.0, coords2[:x]]] + points.map {|p| [p[:rate], p[:x]]} + [[1.0, coords1[:x]]]
+      x = GTFS.lerp_using_rows(rows, t)
+
+      rows = [[0.0, coords2[:y]]] + points.map {|p| [p[:rate], p[:y]]} + [[1.0, coords1[:y]]]
+      y = GTFS.lerp_using_rows(rows, t)
+
+      return [x, y]
+    else
+      return GTFS.lerp_coords(coords1, coords2, t)
+    end
   end
 
-  def self.lerp(coords1, coords2, t)
+  def self.lerp_coords(coords1, coords2, t)
     return [
       coords1[:x] + (coords2[:x] - coords1[:x]) * t,
       coords1[:y] + (coords2[:y] - coords1[:y]) * t,
     ]
+  end
+
+  def self.lerp(x1, x2, y1, y2, x)
+    return y1 + (y2 - y1) / (x2 - x1) * (x - x1)
+  end
+
+  # p GTFS.lerp_using_rows([
+  #   [0.0, 5.0],
+  #   [0.2, 8.0],
+  #   [0.4, 10.0],
+  #   [1.0, 15.0],
+  # ], 0.9)
+  # => 14.166666666666668
+  def self.lerp_using_rows(rows, t)
+    rows[0...-1].each_with_index do |row, i|
+      if row[0] <= t && t <= rows[i + 1][0]
+        return self.lerp(row[0], rows[i + 1][0], row[1], rows[i + 1][1], t)
+      end
+    end
   end
 
   def self.main(gtfs)
@@ -225,7 +269,7 @@ class GTFS
 
   def self.test2(gtfs)
     #pp gtfs.select_stops_by_trip_id("J22209L011TD05")
-    now = Time.new(2017, 2, 14, 11, 10)
+    now = Time.new(2017, 2, 14, 7, 32, 40)
     trips = gtfs.select_trips_by_time(["J22209L07"], now)
     puts "trips = "
     pp trips
@@ -236,9 +280,9 @@ class GTFS
       pp gtfs.get_coords_by_time(trip[:id], now)
     end
 
-    gtfs.select_stops_by_trip_id("J22209L09TL04").each do |stop|
-      puts "#{stop[:stop][:id]},#{stop[:stop][:name]}"
-    end
+    #gtfs.select_stops_by_trip_id("J22209L09TL04").each do |stop|
+      #puts "#{stop[:stop][:id]},#{stop[:stop][:name]}"
+    #end
   end
 
   private
@@ -261,14 +305,27 @@ class GTFS
     csv = CSV.read(csv_path, @csv_options)
     csv.each do |row|
       point = OpenStruct.new({
-        id:           row["intermediate_point_id"],
         stop_id1:     row["stop_id1"],
         stop_id2:     row["stop_id2"],
         x:            row["x"].to_f,
         y:            row["y"].to_f,
+        rate:         row["rate"],
       })
       key = point[:stop_id1] + ":" + point[:stop_id2]
-      @intermediate_points[key] = point
+      if !@intermediate_points[key]
+        @intermediate_points[key] = []
+      end
+      @intermediate_points[key] << point
+    end
+
+    @intermediate_points.each do |k, points|
+      points.each_with_index do |p, i|
+        if p[:rate] == "auto"
+          p[:rate] = (i + 1).to_f / (points.length + 1)
+        else
+          p[:rate] = p[:rate].to_f
+        end
+      end
     end
   end
 
@@ -284,5 +341,13 @@ if __FILE__ == $0
     puts "Quit console"
   else
     GTFS.test2(gtfs)
+    #pp gtfs.lerp_using_intermediate_points(
+      #"J22209006",
+      #"J22209867",
+      #{x: -0.05517578125, y: 0.0531005859375},
+      #{x: -0.05810546875, y: 0.052734375},
+      #nil,
+      #nil,
+      #0.5)
   end
 end
