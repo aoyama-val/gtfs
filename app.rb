@@ -4,12 +4,12 @@ require "json"
 require "time"
 require "byebug"
 require "pry"
-#require "sqlite3"
 
 require_relative "./gtfs.rb"
 
 set :show_exceptions, false
 
+# グローバルなGTFSオブジェクトを返す
 def gtfs
   if !$gtfs
     $gtfs = GTFS.new
@@ -49,20 +49,18 @@ end
 after do
 end
 
+# エラーハンドラ
 error do
   'エラーが発生しました。 - ' + env['sinatra.error'].message
 end
 
+# indexページ
 get "/" do
   response.headers["Content-Type"] = "text/html; charset=utf-8"
   erb :index
 end
 
-#get "/map" do
-  #response.headers["Content-Type"] = "text/html; charset=utf-8"
-  #File.read("./shimada/index.html")
-#end
-
+# バス停一覧を返す
 get "/stops" do
   stops = gtfs.stops
   return JSON.generate({
@@ -70,6 +68,7 @@ get "/stops" do
   })
 end
 
+# 指定バス停に止まる時刻のリストを返す
 get "/select_stop_times" do
   stop_id = get_required(params, "stop_id")
   stop_times = gtfs.select_stop_times(nil, stop_id)
@@ -78,6 +77,7 @@ get "/select_stop_times" do
   })
 end
 
+# バスの現在座標を返す
 get "/bus_coords" do
   route_ids  = get_required(params, "route_ids").split(":")
   time       = get_required(params, "time")
@@ -96,20 +96,4 @@ get "/bus_coords" do
   return JSON.generate({
     buses: buses,
   })
-end
-
-# デバッグ用
-get "/dir" do
-  Dir.pwd
-end
-
-
-get '/hoge' do
-  a = get_required(params, "a")
-  b = get_optional(params, "b", 100).to_i
-  ret = {
-    a: a,
-    b: b,
-  }
-  return JSON.pretty_generate(ret)
 end
