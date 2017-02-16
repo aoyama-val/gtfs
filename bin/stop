@@ -1,0 +1,4 @@
+#!/bin/sh
+
+kill $(cat tmp/pid.txt)
+rm -f tmp/pid.txt

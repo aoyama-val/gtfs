@@ -7,5 +7,5 @@
 ## start
 
 ```
-./start
+bin/start
 ```

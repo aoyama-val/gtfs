@@ -1,3 +1,0 @@
-#!/bin/sh
-
-bundle exec rackup --pid pid.txt -o 0.0.0.0 -D

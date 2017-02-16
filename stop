@@ -1,4 +1,0 @@
-#!/bin/sh
-
-kill $(cat pid.txt)
-rm -f pid.txt

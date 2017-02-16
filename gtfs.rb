@@ -193,6 +193,9 @@ class GTFS
     end
   end
 
+  def lerp_using_intermediate_points
+  end
+
   def self.lerp(coords1, coords2, t)
     return [
       coords1[:x] + (coords2[:x] - coords1[:x]) * t,
