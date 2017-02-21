@@ -28,7 +28,7 @@
 
   <script>
     $(function() {
-      $.getJSON("/stops", function(result) {
+      $.getJSON("./stops", function(result) {
         var $stops = $('#stops');
         var $sidebar_inside = $('.sidebar_inside');
         result.stops.forEach(function(stop) {
@@ -48,7 +48,7 @@
     });
 
     function selectStopTimes(stop_id) {
-      $.getJSON("/select_stop_times", {stop_id: stop_id}, function(result) {
+      $.getJSON("./select_stop_times", {stop_id: stop_id}, function(result) {
         console.log(result);
 
         var $result = $('#result');

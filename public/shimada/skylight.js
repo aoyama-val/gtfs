@@ -101,7 +101,7 @@ function setTime(seconds) {
 // バスの表示位置を更新
 function updateBus() {
   var time = "2017-02-14 " + $('#time').val();
-  $.getJSON("/bus_coords", {route_ids: g_route_ids, time: time}, function(data) {
+  $.getJSON("../bus_coords", {route_ids: g_route_ids, time: time}, function(data) {
     moveBusMarkers(data.buses);
   });
 }
